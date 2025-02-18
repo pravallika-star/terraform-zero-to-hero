@@ -1,7 +1,9 @@
 provider "aws" {
   region = "us-east-1"
+      AWS_ACCESS_KEY_ID = credentials('aws-cred')  
+      AWS_SECRET_ACCESS_KEY = credentials('aws-cred-secret')
+    
 }
-
 
 module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
