@@ -1,14 +1,45 @@
-provider "aws" {
-  region = "us-east-1"
-      AWS_ACCESS_KEY_ID = credentials('aws-cred')  
-      AWS_SECRET_ACCESS_KEY = credentials('aws-cred-secret')
-    
-}
+pipeline {
+    agent any
 
-module "ec2_instance" {
-  source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "5.6.0"
-  ami           = "ami-053b0d53c279acc90"
-  instance_type = "t2.micro"
-  subnet_id      = "subnet-02b7248d03df5ecd6" 
+    environment {
+        AWS_REGION = 'us-east-1'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/pravallika-star/terraform-zero-to-hero.git'
+            }
+        }
+
+        stage('Setup Terraform') {
+            steps {
+                sh 'terraform --version'
+            }
+        }
+
+        stage('Initialize Terraform') {
+            steps {
+                withAWS(credentials: 'aws-cred', region: "${AWS_REGION}") {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                withAWS(credentials: 'aws-cred', region: "${AWS_REGION}") {
+                    sh 'terraform plan -out=tfplan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                withAWS(credentials: 'aws-cred', region: "${AWS_REGION}") {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+    }
 }
